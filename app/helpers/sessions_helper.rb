@@ -3,9 +3,33 @@ module SessionsHelper
 		session[:user_id] = user.id
 	end
 
+	# 在持久会话中记住用户
+	def remember(user)
+		user.remember
+		cookies.permanent.signed[:user_id] = user.id
+		cookies.permanent[:remember_token] = user.remember_token
+	end
+
+	# 返回当前登录用户（如果有的话）
 	def current_user
-		@current_user ||= User.find_by(id: session[:user_id])
-		
+		# @current_user ||= User.find_by(id: session[:user_id])
+		if (user_id = session[:user_id])
+			@current_user ||= User.find_by(id: user_id)
+
+		elsif (user_id = cookies.signed[:user_id])
+			user = User.find_by(id: user_id)
+			if user && user.authenticated?(cookies[:remember_token])
+				log_in user
+				@current_user = users
+			end
+		end
+	end
+
+	# 忘记持久会话
+	def method_name
+		user.forget
+		cookies.delete(:user_id)
+		cookies.delete(:remember_token)
 	end
 
 	def logged_in?
