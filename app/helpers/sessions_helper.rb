@@ -20,13 +20,17 @@ module SessionsHelper
 			user = User.find_by(id: user_id)
 			if user && user.authenticated?(cookies[:remember_token])
 				log_in user
-				@current_user = users
+				@current_user = user
 			end
 		end
 	end
 
+	def current_user?(user)
+		user == current_user
+	end
+
 	# 忘记持久会话
-	def method_name
+	def forget(user)
 		user.forget
 		cookies.delete(:user_id)
 		cookies.delete(:remember_token)
@@ -34,11 +38,23 @@ module SessionsHelper
 
 	def logged_in?
 		!current_user.nil?
-		
 	end
 
 	def log_out
 		session.delete(:user_id)
+		cookies.delete(:remember_token)
+
     	@current_user = nil
+	end
+
+	# 重定向到存储的地址或默认地址
+	def redirect_back_or(default)
+		redirect_to(session[:forwarding_url] || default)
+		session.delete(:forwarding_url)
+	end
+
+	# 存储后面需要使用的地址
+	def store_location
+		session[:forwarding_url] = request.original_url if request.get?
 	end
 end

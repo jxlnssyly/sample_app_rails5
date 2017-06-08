@@ -3,8 +3,10 @@ class User < ApplicationRecord
 	before_save { self.email = email.downcase }
 	validates :name, presence: true, length: { maximum: 50 }
 	VALID_EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-.]+\.[a-z]+\z/i
-	validates :email, presence: true, length: { maximum: 255 }, format: { with: VALID_EMAIL_REGEX }, uniqueness: { case_sensitive: false }
-	validates :password,presence: true, length: { maximum: 6 }
+	# validates :email, presence: true, length: { maximum: 255 }, format: { with: VALID_EMAIL_REGEX }, uniqueness: { case_sensitive: false }
+	validates :email, presence: true, format: { with: VALID_EMAIL_REGEX }, uniqueness: { case_sensitive: false} # case_sensitive 不区分大小写
+
+	validates :password,presence: true, length: { maximum: 6 }, allow_nil: true
 =begin
 在模型中调用这个方法后，会自动添加如下功能：
 在数据库中的 password_digest 列存储安全的密码哈希值；
@@ -40,7 +42,7 @@ class User < ApplicationRecord
 
 	def authenticated?(remember_token)
 		return false if remember_digest.nil?
-		BCrypt::password.new(remember_digest).is_password?(remember_token)
+		BCrypt::Password.new(remember_digest).is_password?(remember_token)
 		
 	end
 
